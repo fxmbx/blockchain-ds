@@ -69,17 +69,67 @@ exports.mine = asyncHandler(async (req, res, next) => {
     const blockHash = funcoin.hashBlock(previousBlockHash, currentBlockData, nonce)
 
     //reward for mining
-    funcoin.createNewTransaction(12.5, "00", nodeAddress)
+    // funcoin.createNewTransaction(12.5, "00", nodeAddress)
 
     const newBlock = funcoin.createNewBlock(nonce, previousBlockHash, blockHash)
 
+    const requestPromises = []
+    funcoin.networkNodes.forEach(networkNodeUrl => {
+        const requestOptions = {
+            uri: networkNodeUrl + '/api/v1/receive-new-block',
+            method: 'POST',
+            body: { newBlock: newBlock },
+            json: true
+        }
+        requestPromises.push(rp(requestOptions))
+    })
 
-    res.json({
-        data: "New block mined successfully",
-        block: newBlock
+    Promise.all(requestPromises).then(data => {
+        const requestOptions = {
+            uri: funcoin.currentNodeUrl + '/api/v1/transaction/broadcast',
+            method: 'POST',
+            body: {
+                amount: 12.5,
+                sender: "00",
+                recipient: nodeAddress
+            },
+            json: true
+        }
+        return rp(requestOptions)
+    }).then(data => {
+        res.json({
+            data: "New block mined and broadcasted successfully",
+            block: newBlock
+        })
     })
 })
 
+exports.receiveNewBlock = asyncHandler(async (req, res, next) => {
+    const { newBlock } = req.body
+    //verify block, if the previous block hash is equqll to the hash of the previous hash and the index is correct
+
+    const lastBlock = funcoin.getLastBlock()
+    const validHash = lastBlock.hash === newBlock.previousBlockHash;
+    const validIndex = lastBlock['index'] + 1 === newBlock['index']
+
+    if (validHash && validIndex) {
+        funcoin.chain.push(newBlock);
+        funcoin.pendingTransactions = []
+
+        res.json({
+            data: newBlock,
+            message: 'New Block Received and accepted',
+
+        })
+    } else {
+        res.json({
+            data: newBlock,
+            message: 'New Block Rejected',
+
+        })
+
+    }
+})
 
 exports.registerAndBroadcastNode = async (req, res, next) => {
     const { newNodeUrl } = req.body

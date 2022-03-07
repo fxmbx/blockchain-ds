@@ -1,4 +1,6 @@
 const sha256 = require('sha256')
+const { v4: uuid } = require('uuid')
+
 
 const currentNodeUrl = 'http://localhost:' + process.argv[2]
 console.log(currentNodeUrl.yellow)
@@ -37,13 +39,22 @@ Blockchain.prototype.getLastBlock = function () {
 //newTransaction are pending till a new block is created
 Blockchain.prototype.createNewTransaction = function (amount, sender, recipient) {
     const newTransaction = {
+        transactionId: uuid().split('-').join(''),
         amount: amount,
         sender: sender,
         recipient: recipient
     }
-    this.pendingTransactions.push(newTransaction)
 
-    return this.getLastBlock()['index'] + 1 //return the number of the ock where the new transaction wil be one 
+    return newTransaction
+    // this.pendingTransactions.push(newTransaction)
+
+    // return this.getLastBlock()['index'] + 1 //return the number of the ock where the new transaction wil be one 
+}
+
+
+Blockchain.prototype.addTransactionToPendingTransactions = function (transactionObj) {
+    this.pendingTransactions.push(transactionObj)
+    return this.getLastBlock()['index'] + 1
 }
 
 Blockchain.prototype.hashBlock = function (previousBlockHash, currentBlockData, nonce) {

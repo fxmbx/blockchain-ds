@@ -8,16 +8,46 @@ const rp = require('request-promise')
 const funcoin = new Blockchain();
 const nodeAddress = uuid().split('-').join('')
 // console.log(nodeAddress)
+
 exports.transaction = asyncHandler(async (req, res, next) => {
 
-    const { amount, sender, recipient } = req.body
-    const blockIndex = funcoin.createNewTransaction(amount, sender, recipient)
+    // const { amount, sender, recipient } = req.body
+    // const blockIndex = funcoin.createNewTransaction(amount, sender, recipient)
+    const { newTransaction } = req.body
+    console.log(newTransaction)
+    const blockIndex = funcoin.addTransactionToPendingTransactions(newTransaction)
     res.json(
         {
             note: `Transaction will be added on block ${blockIndex} on the chain`,
             success: true
         })
 
+})
+
+exports.transactionBroadcast = asyncHandler(async (req, res, next) => {
+    const { amount, sender, recipient } = req.body
+    const newTransaction = funcoin.createNewTransaction(amount, sender, recipient)
+
+    funcoin.addTransactionToPendingTransactions(newTransaction)
+    const requestPromises = []
+    funcoin.networkNodes.forEach(networkNodeUrl => {
+        const reqOptions = {
+            uri: networkNodeUrl + '/api/v1/transaction',
+            method: 'POST',
+            body: { newTransaction: newTransaction },
+            json: true
+        }
+
+        requestPromises.push(rp(reqOptions))
+    })
+
+    Promise.all(requestPromises).then(data => {
+        console.log(data)
+        res.json({
+            data: 'Transaction created and broadcasted succesfully',
+            success: true
+        })
+    })
 })
 
 exports.blockchain = asyncHandler(async function (req, res, next) {
@@ -91,12 +121,7 @@ exports.registerNode = async (req, res, next) => {
     const nodeNotPresent = funcoin.networkNodes.indexOf(newNodeUrl) == -1
     const notCurrentNode = funcoin.currentNodeUrl !== newNodeUrl
     console.log(`Node not present: ${nodeNotPresent}\nNot Current Node: ${notCurrentNode}`)
-    // if (!notCurrentNode || !nodeNotPresent) {
-    //     return next(new ErrorResponse(`Node exist`, 403))
-
-    // }
     if (nodeNotPresent && notCurrentNode)
-
         funcoin.networkNodes.push(newNodeUrl)
 
     res.json({
@@ -126,3 +151,4 @@ exports.registerNodesBulk = async (req, res, next) => {
         success: true
     })
 }
+

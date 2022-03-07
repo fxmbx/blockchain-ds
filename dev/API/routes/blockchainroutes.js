@@ -1,11 +1,12 @@
 const express = require('express')
-const { transaction, blockchain, mine, registerNode, registerNodesBulk, registerAndBroadcastNode } = require('../endpoints/blockchainEndpoints')
+const { transaction, blockchain, mine, registerNode, registerNodesBulk, registerAndBroadcastNode, transactionBroadcast } = require('../endpoints/blockchainEndpoints')
 const router = express.Router()
 
 
 router.route('/blockchain').get(blockchain)
 
 router.route('/transaction').post(transaction)
+router.route('/transaction/broadcast').post(transactionBroadcast)
 
 router.route('/mine').get(mine)
 

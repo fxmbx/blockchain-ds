@@ -1,5 +1,5 @@
 const express = require('express')
-const { transaction, blockchain, mine, registerNode, registerNodesBulk, registerAndBroadcastNode, transactionBroadcast, receiveNewBlock, consensus } = require('../endpoints/blockchainEndpoints')
+const { transaction, blockchain, mine, registerNode, registerNodesBulk, registerAndBroadcastNode, transactionBroadcast, receiveNewBlock, consensus, getBlockByHash, getTransactionById, getTransactionByAddressId } = require('../endpoints/blockchainEndpoints')
 const router = express.Router()
 
 
@@ -17,4 +17,9 @@ router.route('/register-nodes-bulk').post(registerNodesBulk)
 
 router.route('/consensus').get(consensus)
 
-module.exports = router
+router.route('/block/:blockHash').get(getBlockByHash)
+router.route('/transaction/:transactionId').get(getTransactionById)
+router.route('/address/:address').get(getTransactionByAddressId)
+
+
+module.exports = router;

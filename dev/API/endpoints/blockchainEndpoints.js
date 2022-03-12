@@ -7,14 +7,14 @@ const rp = require('request-promise')
 
 const funcoin = new Blockchain();
 const nodeAddress = uuid().split('-').join('')
-// console.log(nodeAddress)
+// //console.log(nodeAddress)
 
 exports.transaction = asyncHandler(async (req, res, next) => {
 
     // const { amount, sender, recipient } = req.body
     // const blockIndex = funcoin.createNewTransaction(amount, sender, recipient)
     const { newTransaction } = req.body
-    console.log(newTransaction)
+    //console.log(newTransaction)
     const blockIndex = funcoin.addTransactionToPendingTransactions(newTransaction)
     res.json(
         {
@@ -42,7 +42,7 @@ exports.transactionBroadcast = asyncHandler(async (req, res, next) => {
     })
 
     Promise.all(requestPromises).then(data => {
-        console.log(data)
+        //console.log(data)
         res.json({
             data: 'Transaction created and broadcasted succesfully',
             success: true
@@ -60,10 +60,10 @@ exports.blockchain = asyncHandler(async function (req, res, next) {
 exports.mine = asyncHandler(async (req, res, next) => {
 
     const lastBlock = funcoin.getLastBlock()
-    const previousBlockHash = lastBlock['hash']
+    const previousBlockHash = lastBlock.hash
     const currentBlockData = {
-        transaction: funcoin.pendingTransactions,
-        index: lastBlock['index'] + 1
+        transactions: funcoin.pendingTransactions,
+        index: lastBlock.index + 1
     }
     const nonce = funcoin.proofOfWork(previousBlockHash, currentBlockData)
     const blockHash = funcoin.hashBlock(previousBlockHash, currentBlockData, nonce)
@@ -110,7 +110,7 @@ exports.receiveNewBlock = asyncHandler(async (req, res, next) => {
 
     const lastBlock = funcoin.getLastBlock()
     const validHash = lastBlock.hash === newBlock.previousBlockHash;
-    const validIndex = lastBlock['index'] + 1 === newBlock['index']
+    const validIndex = lastBlock.index + 1 === newBlock.index
 
     if (validHash && validIndex) {
         funcoin.chain.push(newBlock);
@@ -170,7 +170,7 @@ exports.registerNode = async (req, res, next) => {
 
     const nodeNotPresent = funcoin.networkNodes.indexOf(newNodeUrl) == -1
     const notCurrentNode = funcoin.currentNodeUrl !== newNodeUrl
-    console.log(`Node not present: ${nodeNotPresent}\nNot Current Node: ${notCurrentNode}`)
+    //console.log(`Node not present: ${nodeNotPresent}\nNot Current Node: ${notCurrentNode}`)
     if (nodeNotPresent && notCurrentNode)
         funcoin.networkNodes.push(newNodeUrl)
 
@@ -201,4 +201,52 @@ exports.registerNodesBulk = async (req, res, next) => {
         success: true
     })
 }
+
+exports.consensus = asyncHandler(async (req, res, next) => {
+    const requestPromises = []
+    funcoin.networkNodes.forEach(newtworkUrl => {
+        const requestOptions = {
+            uri: newtworkUrl + '/api/v1/blockchain',
+            method: 'GET',
+            json: true
+        }
+        requestPromises.push(rp(requestOptions))
+    })
+
+    Promise.all(requestPromises).then(blockchains => {
+        const currentChainLength = funcoin['chain'].length
+        // console.log('currentchainlength', currentChainLength)
+        let maxChainLength = currentChainLength
+        // console.log('machgthainlength', maxChainLength)
+        let newLongestChain = null
+        let newPendingTransactions = null
+        // console.log(blockchains.length)
+        blockchains.forEach(blockchain => {
+            // console.log('block chain length', blockchain.data.chain.length)
+            // console.log('block chain data', blockchain)
+            if (blockchain.data.chain.length > maxChainLength) {
+                maxChainLength = blockchain.data.chain.length
+                newLongestChain = blockchain.data.chain
+                newPendingTransactions = blockchain.data.pendingTransactions
+            }
+        })
+        // console.log('longestchain', newLongestChain)
+        if (!newLongestChain || (newLongestChain && !funcoin.isChainValid(newLongestChain))) {
+            res.json({
+                status: false,
+                message: 'Current chain not replaced',
+                data: funcoin.chain
+            })
+        }
+        else {
+            funcoin.chain = newLongestChain
+            funcoin.pendingTransactions = newPendingTransactions
+            res.json({
+                message: 'This chain has been replaced. New chain in data',
+                data: funcoin.chain
+            })
+        }
+        // console.log('valid chain', funcoin.isChainValid(newLongestChain))
+    })
+})
 

@@ -18,7 +18,8 @@ exports.transaction = asyncHandler(async (req, res, next) => {
     const blockIndex = funcoin.addTransactionToPendingTransactions(newTransaction)
     res.json(
         {
-            note: `Transaction will be added on block ${blockIndex} on the chain`,
+            data: newTransaction,
+            message: `Transaction will be added on block ${blockIndex} on the chain`,
             success: true
         })
 
@@ -44,7 +45,8 @@ exports.transactionBroadcast = asyncHandler(async (req, res, next) => {
     Promise.all(requestPromises).then(data => {
         //console.log(data)
         res.json({
-            data: 'Transaction created and broadcasted succesfully',
+            data: newTransaction,
+            message: 'Transaction created and broadcasted succesfully',
             success: true
         })
     })
@@ -156,13 +158,30 @@ exports.registerAndBroadcastNode = async (req, res, next) => {
             json: true
         }
         return rp(bulkRegisterOptions)
-    }).then(data => {
-        res.json({
-            // data,
-            data: 'New Node Registered with network succesfully',
-            success: true
-        })
     })
+        .then(data => {
+            res.json({
+                // data,
+                data: 'New Node Registered with network succesfully',
+                success: true
+
+            })
+        })
+    // const consensusNodePromise = [];
+    // const reqOpts = {
+    //     uri: newNodeUrl + 'api/v1/consensus',
+    //     methog: 'GET',
+    //     json: true
+    // }
+    // consensusNodePromise.push(rp(reqOpts))
+    // Promise.all(consensusNodePromise).then(data => {
+    //     res.json({
+    //         // data,
+    //         data: 'New Node Registered with network succesfully',
+    //         success: true
+
+    //     })
+    // })
 }
 
 exports.registerNode = async (req, res, next) => {
@@ -197,7 +216,8 @@ exports.registerNodesBulk = async (req, res, next) => {
     })
 
     res.json({
-        data: 'Registration succesfull',
+        data: allNetworkNodes,
+        message: 'Registration succesfull',
         success: true
     })
 }
@@ -250,3 +270,60 @@ exports.consensus = asyncHandler(async (req, res, next) => {
     })
 })
 
+exports.getBlockByHash = asyncHandler(async (req, res, next) => {
+    const { blockHash } = req.params
+    const correctBlock = funcoin.getBlock(blockHash)
+    if (!correctBlock)
+        res.json({
+            data: correctBlock,
+            message: 'Block not found 😄'
+        })
+    else
+        res.json({
+            data: correctBlock,
+            message: "Block Found 😞"
+        })
+
+})
+
+exports.getTransactionById = asyncHandler(async (req, res, next) => {
+    const { transactionId } = req.params
+    const transactionData = funcoin.getTransaction(transactionId)
+    if (transactionData.transaction != null && transactionData.block !== null) {
+        res.json({
+            data: {
+                transaction: transactionData.transaction,
+                block: transactionData.block
+            },
+            message: "Transaction found 😀"
+        })
+    }
+    else if (transactionData.transaction != null && transactionData.block === null) {
+        res.json({
+            data: {
+                transaction: transactionData.transaction,
+                block: transactionData.block
+            },
+            message: "Transaction found but still pending🤓"
+        })
+    }
+    else {
+        res.json({
+            data: {
+                transaction: transactionData.transaction,
+                block: transactionData.block
+            },
+            message: "Transaction Not found 😞"
+        })
+    }
+})
+
+exports.getTransactionByAddressId = asyncHandler(async (req, res, next) => {
+
+    const { address } = req.params
+    const addressData = funcoin.getAddressData(address)
+    res.json({
+        data: addressData,
+        message: "Address found, hope say you no too broke sha 😉"
+    })
+})

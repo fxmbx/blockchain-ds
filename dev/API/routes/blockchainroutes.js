@@ -2,6 +2,7 @@ const express = require('express')
 const { transaction, blockchain, mine, registerNode, registerNodesBulk, registerAndBroadcastNode, transactionBroadcast, receiveNewBlock, consensus, getBlockByHash, getTransactionById, getTransactionByAddressId } = require('../endpoints/blockchainEndpoints')
 const router = express.Router()
 
+const { protect } = require('../Middleware/auth')
 
 router.route('/blockchain').get(blockchain)
 
@@ -20,6 +21,9 @@ router.route('/consensus').get(consensus)
 router.route('/block/:blockHash').get(getBlockByHash)
 router.route('/transaction/:transactionId').get(getTransactionById)
 router.route('/address/:address').get(getTransactionByAddressId)
+
+
+// router.route('/block-explorer').get(blockExplorer)
 
 
 module.exports = router

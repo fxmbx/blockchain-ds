@@ -42,8 +42,8 @@ const currentBlockData = [
 
 const nonce = 21166
 
-// console.log(bitcoin.hashBlock(previousBlockHash, currentBlockData, nonce))
-// console.log(bitcoin.proofOfWork(previousBlockHash, currentBlockData))
+// //console.log(bitcoin.hashBlock(previousBlockHash, currentBlockData, nonce))
+// //console.log(bitcoin.proofOfWork(previousBlockHash, currentBlockData))
 const bc1 =
 
     [
@@ -164,5 +164,5 @@ const bc1 =
     ]
 
 
-// console.log(bitcoin)
-console.log("Valid blockchian: 🤭", bitcoin.isChainValid(bc1))
+// //console.log(bitcoin)
+//console.log("Valid blockchian: 🤭", bitcoin.isChainValid(bc1))

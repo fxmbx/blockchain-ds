@@ -70,60 +70,66 @@ exports.blockchain = asyncHandler(async function (req, res, next) {
 
 
 exports.mine = asyncHandler(async (req, res, next) => {
+    try {
 
-    const getPendingT = await PendingTransactions.find()
-    const getBlockchain = await Finecoin.find();
+        const getPendingT = await PendingTransactions.find()
+        const getBlockchain = await Finecoin.find();
 
-    const lastBlock = await finecoin.getLastBlock()
-    //console.log('last block is ', lastBlock)
-    const previousBlockHash = lastBlock.hash
-    const currentBlockData = {
-        transactions: getPendingT[0],
-        index: lastBlock.index + 1
-    }
-    // const currentBlockData = {
-    //     transactions: finecoin.pendingTransactions,
-    //     index: lastBlock.index + 1
-    // }
-    const nonce = finecoin.proofOfWork(previousBlockHash, currentBlockData)
-    const blockHash = finecoin.hashBlock(previousBlockHash, currentBlockData, nonce)
-
-    //reward for mining
-    // finecoin.createNewTransaction(12.5, "00", nodeAddress)
-    console.log(getBlockchain[0].networkNodes)
-
-    const newBlock = await finecoin.createNewBlock(nonce, previousBlockHash, blockHash)
-
-    const requestPromises = []
-
-    // getBlockchain[0].networkNodes.forEach(networkNodeUrl => {
-    //     const requestOptions = {
-    //         uri: networkNodeUrl + '/api/v1/receive-new-block',
-    //         method: 'POST',
-    //         body: { newBlock: newBlock },
-    //         json: true
-    //     }
-    //     requestPromises.push(rp(requestOptions))
-    // })
-
-    Promise.all(requestPromises).then(data => {
-        const requestOptions = {
-            uri: getBlockchain[0].currentNodeUrl + '/api/v1/transaction/broadcast',
-            method: 'POST',
-            body: {
-                amount: 12.5,
-                sender: "00",
-                recipient: nodeAddress
-            },
-            json: true
+        const lastBlock = await finecoin.getLastBlock()
+        //console.log('last block is ', lastBlock)
+        const previousBlockHash = lastBlock.hash
+        const currentBlockData = {
+            transactions: getPendingT[0],
+            index: lastBlock.index + 1
         }
-        return rp(requestOptions)
-    }).then(data => {
-        res.json({
-            data: "New block mined and broadcasted successfully",
-            block: newBlock
+        // const currentBlockData = {
+        //     transactions: finecoin.pendingTransactions,
+        //     index: lastBlock.index + 1
+        // }
+        const nonce = finecoin.proofOfWork(previousBlockHash, currentBlockData)
+        const blockHash = finecoin.hashBlock(previousBlockHash, currentBlockData, nonce)
+
+        //reward for mining
+        // finecoin.createNewTransaction(12.5, "00", nodeAddress)
+        console.log(getBlockchain[0].networkNodes)
+
+        const newBlock = await finecoin.createNewBlock(nonce, previousBlockHash, blockHash)
+
+        const requestPromises = []
+
+        // getBlockchain[0].networkNodes.forEach(networkNodeUrl => {
+        //     const requestOptions = {
+        //         uri: networkNodeUrl + '/api/v1/receive-new-block',
+        //         method: 'POST',
+        //         body: { newBlock: newBlock },
+        //         json: true
+        //     }
+        //     requestPromises.push(rp(requestOptions))
+        // })
+
+        Promise.all(requestPromises).then(data => {
+            const requestOptions = {
+                uri: getBlockchain[0].currentNodeUrl + '/api/v1/transaction/broadcast',
+                method: 'POST',
+                body: {
+                    amount: 12.5,
+                    sender: "00",
+                    recipient: nodeAddress
+                },
+                json: true
+            }
+            return rp(requestOptions)
+        }).then(data => {
+            res.json({
+                data: "New block mined and broadcasted successfully",
+                block: newBlock
+            })
         })
-    })
+    } catch (error) {
+        return next(new ErrorResponse(`Yikes 💩 ${error.message}`, 401))
+
+    }
+
 })
 
 exports.receiveNewBlock = asyncHandler(async (req, res, next) => {
@@ -209,7 +215,7 @@ exports.registerNode = async (req, res, next) => {
 
     const nodeNotPresent = finecoin.networkNodes.indexOf(newNodeUrl) == -1
     const notCurrentNode = finecoin.currentNodeUrl !== newNodeUrl
-    ////console.log(`Node not present: ${nodeNotPresent}\nNot Current Node: ${notCurrentNode}`)
+    ////console.log(`Node not present: ${ nodeNotPresent }\nNot Current Node: ${ notCurrentNode }`)
     if (nodeNotPresent && notCurrentNode)
         finecoin.networkNodes.push(newNodeUrl)
 

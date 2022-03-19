@@ -2,25 +2,25 @@ const express = require('express')
 const { transaction, blockchain, mine, registerNode, registerNodesBulk, registerAndBroadcastNode, transactionBroadcast, receiveNewBlock, consensus, getBlockByHash, getTransactionById, getTransactionByAddressId } = require('../endpoints/blockchainEndpoints')
 const router = express.Router()
 
-const { protect } = require('../Middleware/auth')
+const { protect, authorize } = require('../Middleware/auth')
+// router.use(protect)
+router.route('/blockchain').get(protect, blockchain)
 
-router.route('/blockchain').get(blockchain)
+router.route('/transaction').post(protect, transaction)
+router.route('/transaction/broadcast').post(protect, transactionBroadcast)
 
-router.route('/transaction').post(transaction)
-router.route('/transaction/broadcast').post(transactionBroadcast)
+router.route('/mine').get(authorize('admin'), mine)
+router.route('/receive-new-block').post(protect, receiveNewBlock)
 
-router.route('/mine').get(mine)
-router.route('/receive-new-block').post(receiveNewBlock)
+router.route('/register-node').post(protect, registerNode)
+router.route('/register-and-broadcast-node').post(protect, registerAndBroadcastNode)
+router.route('/register-nodes-bulk').post(protect, registerNodesBulk)
 
-router.route('/register-node').post(registerNode)
-router.route('/register-and-broadcast-node').post(registerAndBroadcastNode)
-router.route('/register-nodes-bulk').post(registerNodesBulk)
+router.route('/consensus').get(protect, consensus)
 
-router.route('/consensus').get(consensus)
-
-router.route('/block/:blockHash').get(getBlockByHash)
-router.route('/transaction/:transactionId').get(getTransactionById)
-router.route('/address/:address').get(getTransactionByAddressId)
+router.route('/block/:blockHash').get(protect, getBlockByHash)
+router.route('/transaction/:transactionId').get(protect, getTransactionById)
+router.route('/address/:address').get(protect, getTransactionByAddressId)
 
 
 // router.route('/block-explorer').get(blockExplorer)

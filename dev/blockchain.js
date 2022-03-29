@@ -31,6 +31,8 @@ Blockchain.prototype.createNewBlock = async function (nonce, previousBlockHash, 
     console.log(pendingT[0].pendingTransactions[0])
 
     // console.log('penddddd', pendingT[0].pendingTransactions)
+    // await PendingTransactions.updateMany({ id: "622dfc5b2fcd5b6b87ae0d16" },
+    // { $push: { chain: newBlock } })
     const nextIndex = await this.getLastBlock()
     // console.log("nnnn", nextIndex)
     const newBlock = {
@@ -150,7 +152,7 @@ Blockchain.prototype.isChainValid = async function (blockchain) {
         // console.log('nonce :', currentBlock.nonce)
         if (currentBlock.previousBlockHash !== previousBlock.hash) { validChain = false }
         const blockHash = this.hashBlock(previousBlock.hash, currentBlockData, currentBlock.nonce)
-        console.log('third', blockHash)
+        // console.log('third', blockHash)
         if (blockHash.substring(0, 4) !== '0000') { validChain = false }
     }
 
@@ -163,9 +165,10 @@ Blockchain.prototype.getBlock = async function (blockHash) {
 
     const blockChain = await Finecoin.find()
 
-    blockChain[0].forEach(block => {
+    blockChain[0]?.chain?.forEach(block => {
         if (block.hash === blockHash)
-            correctBlock = block
+            console.log(block.hash)
+        correctBlock = block
         return correctBlock
     })
     return correctBlock
@@ -229,7 +232,10 @@ Blockchain.prototype.getTransaction = async function (transactionId) {
 
 }
 
-
+Blockchain.prototype.getPendingTransactions = async function () {
+    const pendingT = await PendingTransactions.find()
+    return pendingT[0].pendingTransactions
+}
 Blockchain.prototype.getAddressData = async function (address) {
     const blockChain = await Finecoin.find()
 

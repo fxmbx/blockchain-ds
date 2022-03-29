@@ -298,16 +298,17 @@ exports.consensus = asyncHandler(async (req, res, next) => {
 
 exports.getBlockByHash = asyncHandler(async (req, res, next) => {
     const { blockHash } = req.params
-    const correctBlock = finecoin.getBlock(blockHash)
+    const correctBlock = await finecoin.getBlock(blockHash)
+    console.log(correctBlock)
     if (!correctBlock)
         res.json({
             data: correctBlock,
-            message: 'Block not found 😄'
+            message: 'Block not found 😞'
         })
     else
         res.json({
             data: correctBlock,
-            message: "Block Found 😞"
+            message: "Block Found 😃"
         })
 
 })
@@ -359,3 +360,15 @@ exports.getTransactionByAddressId = asyncHandler(async (req, res, next) => {
 exports.blockExplorer = function (req, res) {
     res.sendFile('../FE/index.html', { root: __dirname })
 }
+
+exports.getLatestTransactions = asyncHandler(async (req, res) => {
+    let latestTransaction = await finecoin.getLastBlock()
+    let arrayOfLatestTrans = []
+    let pendingTransactions = await finecoin.getPendingTransactions()
+    arrayOfLatestTrans.push(latestTransaction.transactions)
+    arrayOfLatestTrans.push(pendingTransactions)
+
+    res.json({
+        data: arrayOfLatestTrans
+    })
+}) 

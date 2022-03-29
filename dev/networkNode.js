@@ -3,6 +3,7 @@ const bodyParser = require('body-parser')
 const color = require('colors')
 const dotenv = require('dotenv')
 dotenv.config({ path: './config.env' })
+var cors = require('cors')
 // dotenv.config({ path: './config/config.env' })
 // const Finecoin = require('../dev/API/Model/Finecoin')
 
@@ -12,10 +13,19 @@ const userroutes = require('./API/routes/userroute')
 const errorHandler = require('./API/Middleware/errorHandler')
 const connectDb = require('./API/config/db')
 
+var corsOptions = {
+    origin: 'http://localhost:3000',
+    optionsSuccessStatus: 200 // some legacy browsers (IE11, various SmartTVs) choke on 204
+}
+var cors = require('cors')
+// var app = express()
+
+
 connectDb()
 const app = express()
 app.use(errorHandler)
 
+app.use(cors())
 app.use(express.json({ strict: false }))
 app.use(morgan('dev'))
 

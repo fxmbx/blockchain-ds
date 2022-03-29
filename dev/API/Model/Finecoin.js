@@ -8,7 +8,8 @@ const FinecoinSchema = new mongoose.Schema({
                 unique: [true, 'Block index has to be unique']
             },
             timestamp: {
-                type: Number
+                type: Date,
+                default: Date.now
             },
             transactions: [
                 {
@@ -24,7 +25,15 @@ const FinecoinSchema = new mongoose.Schema({
                     },
                     recipient: {
                         type: String
-                    }
+                    },
+                    confirmed: {
+                        type: Boolean,
+                        default: true
+                    },
+                    timestamp: {
+                        type: Date,
+                        default: Date.now
+                    },
                 }
             ],
             nonce: {
@@ -47,5 +56,13 @@ const FinecoinSchema = new mongoose.Schema({
 
 })
 
+FinecoinSchema.pre('save', async function (next) {
+    this.chain[0].transactions.forEach(trans => {
+        trans.confirmed = true
+
+    });
+})
 module.exports = mongoose.model('Finecoin', FinecoinSchema)
+
+
 

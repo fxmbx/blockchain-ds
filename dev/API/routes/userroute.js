@@ -8,10 +8,10 @@ router.route('/register').post(register)
 
 router.post('/login', login)
 router.get('/logout', logout)
-router.get('/me', protect, getMe)
+router.get('/me', getMe)
 router.post('/forgotPassword', forgotPassword)
 router.put('/resetpassword/:resettoken', resetPassword)
-router.put('/updatedetails', protect, updatedetails)
-router.put('/updatepassword', protect, updatePassword)
+router.put('/updatedetails', updatedetails)
+router.put('/updatepassword', updatePassword)
 
 module.exports = router;  

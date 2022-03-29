@@ -9,7 +9,7 @@ router.route('/blockchain').get(blockchain)
 router.route('/transaction').post(transaction)
 router.route('/transaction/broadcast').post(transactionBroadcast)
 
-router.route('/mine').get(authorize('admin'), mine)
+router.route('/mine').get(mine)
 router.route('/receive-new-block').post(receiveNewBlock)
 
 router.route('/register-node').post(registerNode)
